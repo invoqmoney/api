@@ -29,7 +29,7 @@ curl https://api.invoq.money/v1/invoices \
   }'
 ```
 
-Take the `id` from the response and open `https://pay.invoq.money/<id>` — that's your checkout page. Since this is a test invoice, simulate the payment instead of sending real funds:
+For a live invoice, the `id` from the response is all you need — `https://pay.invoq.money/<id>` is your checkout page. This one is a test invoice, which carries no on-chain payment instructions, so simulate the payment instead:
 
 ```bash
 curl https://api.invoq.money/v1/invoices/<id>/test-payments \
@@ -38,7 +38,7 @@ curl https://api.invoq.money/v1/invoices/<id>/test-payments \
   -d '{ "amount": "12.34" }'
 ```
 
-Your test webhook URL receives `invoice.paid`. That's the whole loop — the rest of this document is the detail.
+If you've set a test webhook URL in the dashboard, it receives a signed `invoice.paid`. That's the whole loop — the rest of this document is the detail.
 
 ## Authentication
 
@@ -99,7 +99,7 @@ Creates an invoice and returns its summary and payment instructions.
 | `currency` | Optional. Currently only `USD` (the default). |
 | `reference_id` | Optional caller-side reference, unique per project + mode, max 200 chars. Retrying with identical terms returns the existing invoice with `200 OK`; different terms return `409 reference_id_conflict`. |
 | `description` | Optional payer-visible text, max 500 chars. |
-| `return_url` | Optional `http(s)` URL shown as the merchant return button after payment, max 1000 chars. Omitted → the project's default return URL is snapshotted. Explicit `null` or `""` → no return URL. |
+| `return_url` | Optional `http(s)` URL shown as the merchant return button after payment, max 1000 chars. Omitted → the project's default return URL is snapshotted. Explicit `null` or `""` → no return URL. On `reference_id` retries an omitted `return_url` is not validated against the existing invoice — pass it explicitly when the retry must assert a specific value. |
 
 Successful response:
 
