@@ -8,6 +8,38 @@ This is the reference for invoq's public REST API. If you use one of the officia
 - **Hosted checkout:** `https://pay.invoq.money/<invoice id>`
 - **Dashboard** (API keys, receiving wallet, webhooks): `https://app.invoq.money`
 
+## How it works
+
+1. **Create an invoice** from your server (`POST /v1/invoices`).
+2. **Let the buyer pay it.** Easiest: send them to the hosted checkout at `https://pay.invoq.money/<invoice id>` — it shows the amount, address, and QR code, speaks ten languages, and needs zero UI work from you. Or embed the same checkout in your own site with [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). The buyer sends USDC or USDT from any wallet or exchange.
+3. **Get told when it's paid.** invoq confirms the transfer on-chain and sends an `invoice.paid` webhook to your server; settlement goes straight to your own wallet.
+
+## Quickstart
+
+Grab a test key (`sk_test_...`) from the dashboard, then create your first invoice:
+
+```bash
+curl https://api.invoq.money/v1/invoices \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{
+    "amount": "12.34",
+    "description": "Website audit for June",
+    "reference_id": "order_10086"
+  }'
+```
+
+Take the `id` from the response and open `https://pay.invoq.money/<id>` — that's your checkout page. Since this is a test invoice, simulate the payment instead of sending real funds:
+
+```bash
+curl https://api.invoq.money/v1/invoices/<id>/test-payments \
+  -H "Authorization: Bearer sk_test_..." \
+  -H "Content-Type: application/json" \
+  -d '{ "amount": "12.34" }'
+```
+
+Your test webhook URL receives `invoice.paid`. That's the whole loop — the rest of this document is the detail.
+
 ## Authentication
 
 Server endpoints use a secret API key created in the dashboard:
@@ -106,10 +138,11 @@ Successful response:
 
 Semantics worth knowing:
 
-- **Funds can't be redirected through this API.** The request cannot set the recipient address, fee configuration, or settlement contract addresses — those are snapshotted from your project and account at creation time. Invoices are immutable after creation except for payment/settlement state.
-- `amount_due` is derived as `max(amount − amount_paid, 0)` and `amount_overpaid` as `max(amount_paid − amount, 0)`, both at 18-decimal scale — never subtract money yourself to detect or size an overpayment.
-- Auto-monitoring for incoming payments ends 30 days after creation (`monitoring_ends_at`); `monitoring_status` is `active` or `ended`, and `null` for test invoices.
-- Test invoices return `deposit_address: null`, `monitoring_ends_at: null`, `monitoring_status: null`, and `direct_onchain_rails: []` — they carry no real payment instructions.
+- **Funds can't be redirected through this API.** The request cannot set the recipient address, fee configuration, or settlement contract addresses — those are snapshotted from your project and account when the invoice is created. After creation an invoice is immutable except for its payment and settlement state.
+- **`direct_onchain_rails` lists the ways the buyer can pay**: one entry per network + token combination (e.g. USDC on Base), each with its typical network fee and confirmation ETA. Checkout UIs render this list as the buyer's network picker.
+- **Amounts are decimal strings, never floats.** Paid/due amounts use 18 fractional digits because that's the precision of on-chain token amounts. `amount_due` is derived as `max(amount − amount_paid, 0)` and `amount_overpaid` as `max(amount_paid − amount, 0)` — read those fields instead of subtracting money yourself.
+- **invoq watches the chain for payments for 30 days** after creation (`monitoring_ends_at`). `monitoring_status` is `active` or `ended`; a payment that arrives after the window needs manual reconciliation from the dashboard. Test invoices have no window (`null`).
+- Test invoices return `deposit_address: null` and `direct_onchain_rails: []` — they carry no real payment instructions; payments are simulated via the test-payments endpoint below.
 - Rate limits per project: live 3,000/minute and 100,000/day; test 300/minute and 10,000/day.
 
 Error codes: `401 invalid_secret_key`, `400 invalid_request`, `400 invalid_amount` (with `amount_too_small` / `amount_too_large` field codes and `meta.min_amount` / `meta.max_amount`), `409 reference_id_conflict`, `409 project_archived`, `409 recipient_address_not_configured`, `409 no_enabled_direct_onchain_rails`, `413 request_body_too_large`, `422 amount_not_supported_by_direct_onchain_rails`, `429 rate_limited`, `500 server_misconfigured`.
@@ -118,7 +151,7 @@ Error codes: `401 invalid_secret_key`, `400 invalid_request`, `400 invalid_amoun
 
 ### `GET /v1/invoices/{id}`
 
-Returns the public invoice summary, payer-visible payment state, project branding, and payment instructions. **No API key required** — invoice ids are shareable, high-entropy public ids used in payment-link URLs, so this is the endpoint payment UIs poll.
+Returns the public invoice summary, payer-visible payment state, project branding, and payment instructions. **No API key required** — invoice ids are shareable, unguessable public ids used in payment-link URLs, so this is the endpoint payment UIs poll.
 
 ```json
 {
@@ -226,13 +259,15 @@ Invoq-Signature: t=...,v1=...
 - Network errors, timeouts, `408`, `429`, and `5xx` are retried with bounded backoff — 1 minute, 5 minutes, 30 minutes, then 2 hours, each with up to 20% jitter — for up to five total attempts. Redirects and other `4xx` responses are non-retryable failures.
 - Delivery is **at-least-once**: handle duplicate deliveries idempotently by event `id`, and respond `2xx` quickly (do the work after acknowledging).
 
-## Test it end to end
+## Going live
 
-1. Create a **test** API key in the dashboard and set your test webhook URL (a tunnel like ngrok or cloudflared works for local dev).
-2. `POST /v1/invoices` with the `sk_test_` key.
-3. `POST /v1/invoices/{id}/test-payments` for the full amount.
-4. Receive `invoice.paid` on your test webhook, verify the signature, and fulfill by `reference_id`.
-5. Go live: create an `sk_live_` key, set the live webhook URL, and switch keys. Nothing else changes.
+Once the loop in the [Quickstart](#quickstart) works against your test webhook (a tunnel like ngrok or cloudflared works for local dev):
+
+1. Create an `sk_live_` key in the dashboard.
+2. Set your live webhook URL in the dashboard.
+3. Switch the key in your server config. Nothing else changes: same endpoints, same shapes — live invoices now carry a real `deposit_address` and rails.
+
+Test invoices and test payments never touch a chain and are never counted as real payments.
 
 ## Support
 
