@@ -95,7 +95,7 @@ Creates an invoice and returns its summary and payment instructions.
 
 | Field | Notes |
 | --- | --- |
-| `amount` | Required. Decimal string, `0.01`–`999.99`, up to 2 fractional digits for USD. Normalized in responses (`12.34` → `12.3400`). |
+| `amount` | Required. Decimal string, `0.01`–`1000000.00`, up to 2 fractional digits for USD. Normalized in responses (`12.34` → `12.3400`). |
 | `currency` | Optional. Currently only `USD` (the default). |
 | `reference_id` | Optional caller-side reference, unique per project + mode, max 200 chars. Retrying with identical terms returns the existing invoice with `200 OK`; different terms return `409 reference_id_conflict`. |
 | `description` | Optional payer-visible text, max 500 chars. |
@@ -141,7 +141,7 @@ Semantics worth knowing:
 - **Funds can't be redirected through this API.** The request cannot set the recipient address, fee configuration, or settlement contract addresses — those are snapshotted from your project and account when the invoice is created. After creation an invoice is immutable except for its payment and settlement state.
 - **`direct_onchain_rails` lists the ways the buyer can pay**: one entry per network + token combination (e.g. USDC on Base), each with its typical network fee and confirmation ETA. Checkout UIs render this list as the buyer's network picker.
 - **Amounts are decimal strings, never floats.** Paid/due amounts use 18 fractional digits because that's the precision of on-chain token amounts. `amount_due` is derived as `max(amount − amount_paid, 0)` and `amount_overpaid` as `max(amount_paid − amount, 0)` — read those fields instead of subtracting money yourself.
-- **invoq watches the chain for payments for 30 days** after creation (`monitoring_ends_at`). `monitoring_status` is `active` or `ended`; a payment that arrives after the window needs manual reconciliation from the dashboard. Test invoices have no window (`null`).
+- **invoq watches the chain for payments for 90 days** after creation (`monitoring_ends_at`). `monitoring_status` is `active` or `ended`; a payment that arrives after the window needs manual reconciliation from the dashboard. Test invoices have no window (`null`).
 - Test invoices return `deposit_address: null` and `direct_onchain_rails: []` — they carry no real payment instructions; payments are simulated via the test-payments endpoint below.
 - Rate limits per project: live 3,000/minute and 100,000/day; test 300/minute and 10,000/day.
 
@@ -169,6 +169,7 @@ Returns the public invoice summary, payer-visible payment state, project brandin
     "amount_paid": "0.000000000000000000",
     "amount_due": "12.340000000000000000",
     "amount_overpaid": "0.000000000000000000",
+    "transfers": [],
     "monitoring_ends_at": "2026-07-07T12:34:56.000Z",
     "monitoring_status": "active",
     "direct_onchain_rails": [ { "...": "..." } ]
@@ -179,6 +180,7 @@ Returns the public invoice summary, payer-visible payment state, project brandin
 - `status` is the canonical invoice status backed by confirmed payment and settlement events.
 - `payment_status` is a payer-facing derived status, exclusive to this endpoint: `unpaid`, `confirming`, `partially_paid`, `paid`, `settling`, `settled`, or `review_required`. It matches `status` except that live invoices with a detected pending transfer show `confirming` while the canonical `status` stays unchanged until the transfer confirms.
 - `review_required` means the invoice is pending manual review. It is **not** a paid state — do not fulfill on it, even if `amount_paid` looks sufficient.
+- `transfers` is the payer-facing receipt trail: the confirmed inbound transfers that credited this invoice, so a checkout can show each on-chain transaction and link it to a block explorer. Exclusive to this endpoint — the create response omits it. Each entry carries `tx_hash`, `amount` (invoice-currency units, the same 18-fractional-digit scale as `amount_paid`), and `explorer_tx_url` (a block-explorer transaction link, or `null` when the transfer's chain has no usable explorer configured). Only confirmed transfers appear — a pending one could still be dropped by a chain reorg — capped at the 20 largest by amount (largest first, ties oldest first) so dust sent to the public deposit address can't crowd out the real payment. Always present on this endpoint: `[]` until a transfer confirms, and always `[]` for test invoices.
 - The caller-only `reference_id` is omitted here; only payer-facing `project` branding fields are returned.
 - Invalidly shaped and unknown ids both return `404 invoice_not_found`.
 
