@@ -13,7 +13,7 @@ This is the reference for invoq's public REST API. If you use one of the officia
 ## How it works
 
 1. **Create an invoice** from your server (`POST /v1/invoices`).
-2. **Let the buyer pay it.** Easiest: send them to the hosted checkout at `https://pay.invoq.money/<invoice id>` — it shows the amount, address, and QR code, speaks ten languages, and needs zero UI work from you. Or embed the same checkout in your own site with [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). The buyer sends USDC or USDT from any wallet or exchange.
+2. **Let the buyer pay it.** Easiest: send them to the hosted checkout at `https://pay.invoq.money/<invoice id>` — it shows the amount, address, and QR code, speaks ten languages, and needs zero UI work from you. Or embed the same checkout in your own site with [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). The buyer sends USDT or USDC from any wallet or exchange.
 3. **Get told when it's paid.** invoq confirms the transfer on-chain and sends an `invoice.paid` webhook to your server; settlement goes straight to your own wallet.
 
 ## Quickstart

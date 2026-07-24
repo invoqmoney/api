@@ -15,7 +15,7 @@ Bu, invoq'un herkese açık REST API'sinin referansıdır. Resmî SDK'lardan bir
 ## Nasıl çalışır
 
 1. **Sunucunuzdan bir fatura oluşturun** (`POST /v1/invoices`).
-2. **Alıcının ödemesini sağlayın.** En kolayı: alıcıyı `https://pay.invoq.money/<fatura id>` adresindeki barındırılan ödeme sayfasına gönderin — tutarı, adresi ve QR kodunu gösterir, on dili destekler ve sizden hiçbir arayüz işi istemez. Ya da aynı ödeme sayfasını [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js) ile kendi sitenize gömün. Alıcı, herhangi bir cüzdandan veya borsadan USDC ya da USDT gönderir.
+2. **Alıcının ödemesini sağlayın.** En kolayı: alıcıyı `https://pay.invoq.money/<fatura id>` adresindeki barındırılan ödeme sayfasına gönderin — tutarı, adresi ve QR kodunu gösterir, on dili destekler ve sizden hiçbir arayüz işi istemez. Ya da aynı ödeme sayfasını [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js) ile kendi sitenize gömün. Alıcı, herhangi bir cüzdandan veya borsadan USDT ya da USDC gönderir.
 3. **Ödendiğinde haberdar olun.** invoq transferi zincir üstünde doğrular ve sunucunuza bir `invoice.paid` webhook'u gönderir; para doğrudan kendi cüzdanınıza iner.
 
 ## Hızlı başlangıç

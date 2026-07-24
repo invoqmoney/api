@@ -15,7 +15,7 @@ Thanh toán stablecoin cho lập trình viên độc lập. Không lưu ký — 
 ## Cách hoạt động
 
 1. **Tạo hóa đơn** từ máy chủ của bạn (`POST /v1/invoices`).
-2. **Để người mua thanh toán hóa đơn.** Cách dễ nhất: gửi họ đến trang thanh toán được lưu trữ sẵn tại `https://pay.invoq.money/<id hóa đơn>` — trang hiển thị số tiền, địa chỉ và mã QR, hỗ trợ mười ngôn ngữ, và bạn không phải động tay làm chút UI nào. Hoặc nhúng chính trang thanh toán đó vào website của bạn bằng [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). Người mua gửi USDC hoặc USDT từ bất kỳ ví hay sàn giao dịch nào.
+2. **Để người mua thanh toán hóa đơn.** Cách dễ nhất: gửi họ đến trang thanh toán được lưu trữ sẵn tại `https://pay.invoq.money/<id hóa đơn>` — trang hiển thị số tiền, địa chỉ và mã QR, hỗ trợ mười ngôn ngữ, và bạn không phải động tay làm chút UI nào. Hoặc nhúng chính trang thanh toán đó vào website của bạn bằng [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). Người mua gửi USDT hoặc USDC từ bất kỳ ví hay sàn giao dịch nào.
 3. **Nhận thông báo khi hóa đơn được thanh toán.** invoq xác nhận khoản chuyển trên chuỗi rồi gửi webhook `invoice.paid` đến máy chủ của bạn; tiền về thẳng ví của chính bạn.
 
 ## Bắt đầu nhanh

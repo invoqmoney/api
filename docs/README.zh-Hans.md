@@ -15,7 +15,7 @@
 ## 工作流程
 
 1. **在服务端创建账单**（`POST /v1/invoices`）。
-2. **让买家付款。** 最省事的做法是把买家引导到托管收银页 `https://pay.invoq.money/<账单 id>`——页面会展示金额、地址和二维码，支持十种语言，你一行 UI 代码都不用写。也可以用 [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js) 把同一个收银台嵌进自己的网站。买家用任意钱包或交易所转 USDC 或 USDT 即可。
+2. **让买家付款。** 最省事的做法是把买家引导到托管收银页 `https://pay.invoq.money/<账单 id>`——页面会展示金额、地址和二维码，支持十种语言，你一行 UI 代码都不用写。也可以用 [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js) 把同一个收银台嵌进自己的网站。买家用任意钱包或交易所转 USDT 或 USDC 即可。
 3. **付款完成时收到通知。** invoq 在链上确认转账后，向你的服务器发送 `invoice.paid` webhook；结算款直接进你自己的钱包。
 
 ## 快速开始

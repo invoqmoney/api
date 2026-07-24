@@ -15,7 +15,7 @@ Esta es la referencia de la API REST pública de invoq. Si usas alguno de los SD
 ## Cómo funciona
 
 1. **Crea una factura** desde tu servidor (`POST /v1/invoices`).
-2. **Deja que el comprador la pague.** Lo más fácil: mándalo al checkout alojado en `https://pay.invoq.money/<id de factura>` — muestra el monto, la dirección y el código QR, está disponible en diez idiomas y no te exige ningún trabajo de UI. O integra el mismo checkout en tu propio sitio con [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). El comprador envía USDC o USDT desde cualquier billetera o exchange.
+2. **Deja que el comprador la pague.** Lo más fácil: mándalo al checkout alojado en `https://pay.invoq.money/<id de factura>` — muestra el monto, la dirección y el código QR, está disponible en diez idiomas y no te exige ningún trabajo de UI. O integra el mismo checkout en tu propio sitio con [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). El comprador envía USDT o USDC desde cualquier billetera o exchange.
 3. **Entérate cuando esté pagada.** invoq confirma la transferencia on-chain y envía un webhook `invoice.paid` a tu servidor; la liquidación va directo a tu propia billetera.
 
 ## Inicio rápido

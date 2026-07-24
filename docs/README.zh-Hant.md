@@ -15,7 +15,7 @@
 ## 運作方式
 
 1. 在你的伺服器上**建立帳單**（`POST /v1/invoices`）。
-2. **讓買家付款。**最簡單的做法：把買家導向託管結帳頁 `https://pay.invoq.money/<invoice id>`——它會顯示金額、位址和 QR code，支援十種語言，你完全不用寫 UI。也可以用 [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js) 把同一個結帳頁嵌進自己的網站。買家從任何錢包或交易所轉出 USDC 或 USDT 即可。
+2. **讓買家付款。**最簡單的做法：把買家導向託管結帳頁 `https://pay.invoq.money/<invoice id>`——它會顯示金額、位址和 QR code，支援十種語言，你完全不用寫 UI。也可以用 [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js) 把同一個結帳頁嵌進自己的網站。買家從任何錢包或交易所轉出 USDT 或 USDC 即可。
 3. **付款完成時收到通知。**invoq 在鏈上確認轉帳後，會向你的伺服器送出 `invoice.paid` webhook；款項直接結算到你自己的錢包。
 
 ## 快速開始

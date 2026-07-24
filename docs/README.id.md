@@ -15,7 +15,7 @@ Ini referensi REST API publik invoq. Kalau Anda memakai salah satu SDK resmi ([N
 ## Cara kerjanya
 
 1. **Buat invoice** dari server Anda (`POST /v1/invoices`).
-2. **Biarkan pembeli membayarnya.** Paling mudah: arahkan mereka ke checkout ter-hosting di `https://pay.invoq.money/<id invoice>` — halaman ini menampilkan jumlah, alamat, dan kode QR, tersedia dalam sepuluh bahasa, dan tidak butuh kerja UI apa pun dari Anda. Atau tanamkan checkout yang sama di situs Anda sendiri dengan [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). Pembeli mengirim USDC atau USDT dari dompet atau bursa mana pun.
+2. **Biarkan pembeli membayarnya.** Paling mudah: arahkan mereka ke checkout ter-hosting di `https://pay.invoq.money/<id invoice>` — halaman ini menampilkan jumlah, alamat, dan kode QR, tersedia dalam sepuluh bahasa, dan tidak butuh kerja UI apa pun dari Anda. Atau tanamkan checkout yang sama di situs Anda sendiri dengan [`@invoq/checkout`](https://github.com/invoqmoney/sdk-js). Pembeli mengirim USDT atau USDC dari dompet atau bursa mana pun.
 3. **Dapatkan kabar begitu dibayar.** invoq mengonfirmasi transfernya secara on-chain dan mengirim webhook `invoice.paid` ke server Anda; settlement masuk langsung ke dompet Anda sendiri.
 
 ## Mulai cepat
