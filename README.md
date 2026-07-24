@@ -75,7 +75,9 @@ Error responses share one shape across all endpoints:
 
 - `code` is a stable machine-readable error code — branch on this, not on `message`.
 - `fields` is present only for field-level validation errors.
-- Extra business context is returned in `meta`, such as `retry_after`, `invoice_id`, or `reference_id`.
+- Extra business context is returned in `meta`, such as `retry_after`, `reason_codes`, or `min_amount`.
+
+Request bodies are limited to 4KB; oversized bodies return `413 request_body_too_large`.
 
 ## Create an invoice
 
@@ -86,7 +88,6 @@ Creates an invoice and returns its summary and payment instructions.
 ```json
 {
   "amount": "12.34",
-  "currency": "USD",
   "reference_id": "order_10086",
   "description": "Website audit for June",
   "return_url": "https://example.com/orders/order_10086"
@@ -95,13 +96,12 @@ Creates an invoice and returns its summary and payment instructions.
 
 | Field | Notes |
 | --- | --- |
-| `amount` | Required. Decimal string, `0.01`–`1000000.00`, up to 2 fractional digits for USD. Normalized in responses (`12.34` → `12.3400`). |
-| `currency` | Optional. Currently only `USD` (the default). |
+| `amount` | Required. Decimal string, `0.01`–`1000000.00`, up to 2 fractional digits. Normalized in responses (`12.34` → `12.3400`). The business currency is fixed to `USD` and returned in responses; it is not a request field. |
 | `reference_id` | Optional caller-side reference, unique per project + mode, max 200 chars. Retrying with identical terms returns the existing invoice with `200 OK`; different terms return `409 reference_id_conflict`. |
 | `description` | Optional payer-visible text, max 500 chars. |
 | `return_url` | Optional `http(s)` URL shown as the merchant return button after payment, max 1000 chars. Omitted → the project's default return URL is snapshotted. Explicit `null` or `""` → no return URL. On `reference_id` retries an omitted `return_url` is not validated against the existing invoice — pass it explicitly when the retry must assert a specific value. |
 
-Successful response:
+Successful response (`201 Created`; idempotent reuse returns `200 OK` with `meta.result: "reused"`):
 
 ```json
 {
@@ -113,23 +113,44 @@ Successful response:
     "reference_id": "order_10086",
     "description": "Website audit for June",
     "return_url": "https://example.com/orders/order_10086",
-    "deposit_address": "0x...",
     "status": "unpaid",
+    "checkout_status": "open",
+    "payment_revision": 0,
     "amount_due": "12.340000000000000000",
     "amount_overpaid": "0.000000000000000000",
-    "monitoring_ends_at": "2026-07-07T12:34:56.000Z",
-    "monitoring_status": "active",
-    "direct_onchain_rails": [
+    "monitoring_ends_at": "2026-06-14T12:34:56.000Z",
+    "payment_options": [
       {
+        "collection_method": "evm_deposit",
         "chain_namespace": "eip155",
         "chain_reference": "8453",
+        "currency": "USD",
         "token_address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+        "token_decimals": 6,
         "network_label": "Base",
         "display_symbol": "USDC",
         "logo_url": null,
         "chain_logo_url": null,
-        "network_fee_usd": "0.0020",
-        "eta_seconds": 10
+        "status": "ready",
+        "deposit_address": "0x20c124f3919bb502c6126cda5bd6e5287859d5ca",
+        "suggested_amount": "12.340000"
+      },
+      {
+        "collection_method": "direct_exact",
+        "chain_namespace": "solana",
+        "chain_reference": "5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp",
+        "currency": "USD",
+        "token_address": "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+        "token_decimals": 6,
+        "network_label": "Solana",
+        "display_symbol": "USDC",
+        "logo_url": null,
+        "chain_logo_url": null,
+        "status": "ready",
+        "recipient_address": "GmaDrppBC7P5ARKV8g3djiwP89vz1jLK23V2GBjuAEGB",
+        "invoice_amount": "12.340000",
+        "matching_increment": "0.000123",
+        "exact_amount": "12.340123"
       }
     ]
   }
@@ -138,20 +159,25 @@ Successful response:
 
 Semantics worth knowing:
 
-- **Funds can't be redirected through this API.** The request cannot set the recipient address, fee configuration, or settlement contract addresses — those are snapshotted from your project and account when the invoice is created. After creation an invoice is immutable except for its payment and settlement state.
-- **`direct_onchain_rails` lists the ways the buyer can pay**: one entry per network + token combination (e.g. USDC on Base), each with its typical network fee and confirmation ETA. Checkout UIs render this list as the buyer's network picker.
-- **Amounts are decimal strings, never floats.** Paid/due amounts use 18 fractional digits because that's the precision of on-chain token amounts. `amount_due` is derived as `max(amount − amount_paid, 0)` and `amount_overpaid` as `max(amount_paid − amount, 0)` — read those fields instead of subtracting money yourself.
-- **invoq watches the chain for payments for 90 days** after creation (`monitoring_ends_at`). `monitoring_status` is `active` or `ended`; a payment that arrives after the window needs manual reconciliation from the dashboard. Test invoices have no window (`null`).
-- Test invoices return `deposit_address: null` and `direct_onchain_rails: []` — they carry no real payment instructions; payments are simulated via the test-payments endpoint below.
+- **Funds can't be redirected through this API.** The request cannot set recipient addresses or contract configuration — those come from your verified project settings when the invoice is created. After creation an invoice is immutable except for its payment and settlement state.
+- **`payment_options` lists the ways the buyer can pay**, one entry per network + token, in payer-facing order (USDT before USDC, then each token's reviewed network order). `collection_method` is the discriminator:
+  - `evm_deposit` — a per-invoice EVM deposit address. Any positive on-time transfer credits by its amount; `suggested_amount` (`max(0, amount_due − pending)`) is guidance, not a match requirement.
+  - `direct_exact` — a Solana/TRON merchant address with an exact amount. The buyer must send exactly `exact_amount` (`invoice_amount + matching_increment`) in one transfer; the increment is how the payment is attributed and is never invoice credit.
+  - Only a `status: "ready"` option carries the payable fields above; an `unavailable` option carries only the common fields. Identify an option by (`chain_namespace`, `chain_reference`, `token_address`), never by array position or display metadata.
+- **`checkout_status` is the payer-facing state**, derived on every response: `paid` (canonical status is paid/settling/settled), `confirming` (pending on-chain evidence), `expired` (past `monitoring_ends_at`), `open` (at least one ready option), or `unavailable`. It never authorizes fulfillment — use the `invoice.paid` webhook.
+- **`payment_revision`** starts at `0` and increments exactly once whenever the confirmed credited payment set changes (each new test payment too). Use it to discard an older invoice snapshot or webhook delivered after a newer one.
+- **Amounts are decimal strings, never floats.** Paid/due amounts use 18 fractional digits. `amount_due` is `max(amount − amount_paid, 0)` and `amount_overpaid` is `max(amount_paid − amount, 0)` — read those fields instead of subtracting money yourself.
+- **invoq watches the chain for 7 days** after creation (`monitoring_ends_at`). A transfer landing at or after that instant is recorded but credits nothing; the dashboard's manual reconcile is the operator backstop for edge cases inside the window.
+- Test invoices return `monitoring_ends_at: null`, `payment_options: []`, and `checkout_status: "unavailable"` — payments are simulated via the test-payments endpoint below.
 - Rate limits per project: live 3,000/minute and 100,000/day; test 300/minute and 10,000/day.
 
-Error codes: `401 invalid_secret_key`, `400 invalid_request`, `400 invalid_amount` (with `amount_too_small` / `amount_too_large` field codes and `meta.min_amount` / `meta.max_amount`), `409 reference_id_conflict`, `409 project_archived`, `409 recipient_address_not_configured`, `409 no_enabled_direct_onchain_rails`, `413 request_body_too_large`, `422 amount_not_supported_by_direct_onchain_rails`, `429 rate_limited`, `500 server_misconfigured`.
+Error codes: `401 invalid_secret_key`, `400 invalid_request`, `400 invalid_amount` (with `amount_too_small` / `amount_too_large` field codes and `meta.min_amount` / `meta.max_amount`), `409 reference_id_conflict`, `409 project_archived`, `409 no_payment_options_available` (with sorted `meta.reason_codes`: `no_merchant_address`, `merchant_address_provisioning`, `below_rail_minimum`, `rail_unavailable`, `scanner_unavailable`, `scanner_capacity_exhausted`, `matching_capacity_exhausted` — `merchant_address_provisioning` is transient and usually clears within a minute or two), `413 request_body_too_large`, `429 rate_limited`, `500 server_misconfigured`.
 
 ## Read an invoice
 
 ### `GET /v1/invoices/{id}`
 
-Returns the public invoice summary, payer-visible payment state, project branding, and payment instructions. **No API key required** — invoice ids are shareable, unguessable public ids used in payment-link URLs, so this is the endpoint payment UIs poll.
+Returns the public invoice summary, payer-visible payment state, project branding, and payment instructions. **No API key required** — invoice ids are shareable, unguessable public ids used in payment-link URLs, so this is the endpoint payment UIs poll (CORS allows any origin for GET).
 
 ```json
 {
@@ -163,24 +189,23 @@ Returns the public invoice summary, payer-visible payment state, project brandin
     "description": "Website audit for June",
     "return_url": "https://example.com/orders/order_10086",
     "project": { "id": "proj_...", "name": "Acme store", "logo_url": "https://..." },
-    "deposit_address": "0x...",
     "status": "unpaid",
-    "payment_status": "confirming",
+    "checkout_status": "confirming",
+    "payment_revision": 0,
     "amount_paid": "0.000000000000000000",
     "amount_due": "12.340000000000000000",
     "amount_overpaid": "0.000000000000000000",
     "transfers": [],
-    "monitoring_ends_at": "2026-07-07T12:34:56.000Z",
-    "monitoring_status": "active",
-    "direct_onchain_rails": [ { "...": "..." } ]
+    "monitoring_ends_at": "2026-06-14T12:34:56.000Z",
+    "payment_options": [ { "...": "..." } ]
   }
 }
 ```
 
-- `status` is the canonical invoice status backed by confirmed payment and settlement events.
-- `payment_status` is a payer-facing derived status, exclusive to this endpoint: `unpaid`, `confirming`, `partially_paid`, `paid`, `settling`, `settled`, or `review_required`. It matches `status` except that live invoices with a detected pending transfer show `confirming` while the canonical `status` stays unchanged until the transfer confirms.
+- `status` is the canonical invoice status backed by confirmed payment and settlement events: `unpaid`, `partially_paid`, `paid`, `settling`, `settled`, or `review_required`.
 - `review_required` means the invoice is pending manual review. It is **not** a paid state — do not fulfill on it, even if `amount_paid` looks sufficient.
-- `transfers` is the payer-facing receipt trail: the confirmed inbound transfers that credited this invoice, so a checkout can show each on-chain transaction and link it to a block explorer. Exclusive to this endpoint — the create response omits it. Each entry carries `tx_hash`, `amount` (invoice-currency units, the same 18-fractional-digit scale as `amount_paid`), and `explorer_tx_url` (a block-explorer transaction link, or `null` when the transfer's chain has no usable explorer configured). Only confirmed transfers appear — a pending one could still be dropped by a chain reorg — capped at the 20 largest by amount (largest first, ties oldest first) so dust sent to the public deposit address can't crowd out the real payment. Always present on this endpoint: `[]` until a transfer confirms, and always `[]` for test invoices.
+- `checkout_status` is the derived payer-facing state described above; live invoices with pending on-chain evidence show `confirming` while canonical `status` stays unchanged until the transfer confirms.
+- `transfers` is the payer-facing receipt trail: confirmed inbound transfers that credited this invoice, so a checkout can show each on-chain transaction and link a block explorer. Each entry carries `chain_namespace`, `chain_reference`, canonical `transaction_id`, `event_index`, `amount` (invoice-currency units at the same 18-fractional-digit scale as `amount_paid`; for `direct_exact` it excludes the matching increment), and `explorer_transaction_url` (or `null`). Only confirmed transfers appear — a pending one could still be dropped by a reorg — capped at the 20 largest by amount so dust sent to a public deposit address can't crowd out the real payment. Always present: `[]` until a transfer confirms, and always `[]` for test invoices.
 - The caller-only `reference_id` is omitted here; only payer-facing `project` branding fields are returned.
 - Invalidly shaped and unknown ids both return `404 invoice_not_found`.
 
@@ -196,7 +221,8 @@ Adds a simulated payment to a **test** invoice and returns the updated payment s
 
 - `amount` is required, must be greater than zero, up to 15 integer and 4 fractional digits (`5`, `5.0`, `5.0000` normalize to `5.0000`).
 - `reference_id` is optional, max 200 chars, and idempotent per invoice: reusing it with the same normalized amount returns `200 OK` with `meta.result: "reused"`; a different amount returns `409 test_payment_reference_conflict`.
-- Partial, full, and over payments are allowed: `partially_paid` while `0 < amount_paid < amount`, `paid` once `amount_paid >= amount`. The first transition into `paid` triggers one logical `invoice.paid` webhook.
+- Partial, full, and over payments are allowed: `partially_paid` while `0 < amount_paid < amount`, `paid` once `amount_paid >= amount`. The first transition into `paid` triggers one logical `invoice.paid` webhook, and each created payment increments `payment_revision`.
+- Creation is limited to 300 per minute and 10,000 per day per project.
 
 Error codes: `401 invalid_secret_key`, `400 invalid_request`, `400 invalid_amount`, `404 invoice_not_found`, `409 project_archived`, `409 test_mode_required`, `409 test_payment_reference_conflict`, `413 request_body_too_large`, `429 rate_limited`, `500 server_misconfigured`.
 
@@ -206,7 +232,7 @@ Configure webhook URLs in the dashboard — test and live each have their own UR
 
 ### Events
 
-**`invoice.paid`** — sent after an invoice first transitions into a paid state (`paid`, `settling`, or `settled`):
+**`invoice.paid`** — sent when an invoice transitions into a paid state (`paid`, `settling`, or `settled`):
 
 ```json
 {
@@ -223,26 +249,18 @@ Configure webhook URLs in the dashboard — test and live each have their own UR
       "currency": "USD",
       "amount_paid": "13.000000000000000000",
       "reference_id": "order_10086",
+      "payment_revision": 1,
       "fully_paid_at": "2026-06-10T10:00:00.000Z"
     }
   }
 }
 ```
 
-- `review_required` never triggers `invoice.paid`. Only after review clears and the invoice actually transitions to a paid state is the event created.
-- `return_url` is intentionally not included; reconcile server-side by `reference_id` and invoice id.
+**`invoice.payment_reversed`** — sent when a previously-paid invoice drops back below its amount (for example a chain reorg removed a credited transfer). Same payload shape, with the invoice's current `status`, `amount_paid`, a higher `payment_revision`, and `fully_paid_at: null`. Treat it as invalidating the earlier fulfillment signal, according to your own business policy.
 
-**`webhook.ping`** — a synthetic connectivity-check event sent from the dashboard's webhook setup, signed the same way:
-
-```json
-{
-  "id": "wping_...",
-  "type": "webhook.ping",
-  "mode": "test",
-  "created_at": "2026-06-10T10:00:00.000Z",
-  "data": { "project": { "id": "proj_..." } }
-}
-```
+- `review_required` never triggers `invoice.paid`. Only after review clears into a paid state is the event created.
+- A true paid → reversed → paid sequence delivers `invoice.paid`, `invoice.payment_reversed`, then a new `invoice.paid`, each with its resulting `payment_revision`.
+- `reference_id` and `fully_paid_at` are nullable but always present; `return_url` and payment instructions are intentionally absent. Reconcile server-side by invoice id plus `reference_id`.
 
 ### Verifying signatures
 
@@ -258,8 +276,8 @@ Invoq-Signature: t=...,v1=...
 ### Delivery and retries
 
 - Delivery POSTs time out after 10 seconds.
-- Network errors, timeouts, `408`, `429`, and `5xx` are retried with bounded backoff — 1 minute, 5 minutes, 30 minutes, then 2 hours, each with up to 20% jitter — for up to five total attempts. Redirects and other `4xx` responses are non-retryable failures.
-- Delivery is **at-least-once**: handle duplicate deliveries idempotently by event `id`, and respond `2xx` quickly (do the work after acknowledging).
+- Every non-2xx response — **including redirects and 4xx** — plus network errors and timeouts is retried with bounded backoff: 1 minute, 5 minutes, 30 minutes, then 2 hours, each with up to 20% jitter, for up to five total attempts.
+- Delivery is **at-least-once** and may be out of order: deduplicate by event `id`, keep the snapshot with the greatest `data.invoice.payment_revision`, and respond `2xx` quickly (do the work after acknowledging).
 
 ## Going live
 
@@ -267,7 +285,7 @@ Once the loop in the [Quickstart](#quickstart) works against your test webhook (
 
 1. Create an `sk_live_` key in the dashboard.
 2. Set your live webhook URL in the dashboard.
-3. Switch the key in your server config. Nothing else changes: same endpoints, same shapes — live invoices now carry a real `deposit_address` and rails.
+3. Switch the key in your server config. Nothing else changes: same endpoints, same shapes — live invoices now carry real `payment_options`.
 
 Test invoices and test payments never touch a chain and are never counted as real payments.
 
