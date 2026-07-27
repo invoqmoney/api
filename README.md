@@ -10,6 +10,12 @@ This is the reference for invoq's public REST API. The official SDKs — [Node.j
 - **Hosted checkout:** `https://pay.invoq.money/<invoice id>`
 - **Dashboard** (API keys, receiving wallet, webhooks): `https://app.invoq.money`
 
+**Coding with AI? Paste this.**
+
+```
+Add stablecoin payments to my project with invoq. Start in test mode. Read the docs before you write any code: https://invoq.money/llms.txt
+```
+
 ## How it works
 
 1. **Create an invoice** from your server (`POST /v1/invoices`).

@@ -12,6 +12,12 @@
 - **托管收银页：**`https://pay.invoq.money/<账单 id>`
 - **商户后台**（API 密钥、收款钱包、webhook）：`https://app.invoq.money`
 
+**在用 AI 写代码？把这段贴给它。**
+
+```
+用 invoq 给我的项目接入稳定币收款，从测试模式开始。写代码前先读文档 https://invoq.money/llms.txt
+```
+
 ## 工作流程
 
 1. **在服务端创建账单**（`POST /v1/invoices`）。

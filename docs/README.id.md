@@ -12,6 +12,12 @@ Ini referensi REST API publik invoq. SDK resmi — [Node.js](https://github.com/
 - **Checkout ter-hosting:** `https://pay.invoq.money/<id invoice>`
 - **Dashboard** (kunci API, dompet penerima, webhook): `https://app.invoq.money`
 
+**Coding pakai AI? Tempelkan ini.**
+
+```
+Tambahkan pembayaran stablecoin ke proyek saya dengan invoq. Mulai dari mode tes. Baca dokumentasinya sebelum menulis kode: https://invoq.money/llms.txt
+```
+
 ## Cara kerjanya
 
 1. **Buat invoice** dari server Anda (`POST /v1/invoices`).

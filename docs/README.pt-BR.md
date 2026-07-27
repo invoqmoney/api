@@ -12,6 +12,12 @@ Esta é a referência da API REST pública da invoq. Os SDKs oficiais — [Node.
 - **Checkout hospedado:** `https://pay.invoq.money/<id da fatura>`
 - **Painel** (chaves de API, carteira de recebimento, webhooks): `https://app.invoq.money`
 
+**Programa com IA? Cole isto.**
+
+```
+Adicione pagamentos em stablecoin ao meu projeto com invoq. Comece no modo de teste. Leia a documentação antes de escrever código: https://invoq.money/llms.txt
+```
+
 ## Como funciona
 
 1. **Crie uma fatura** a partir do seu servidor (`POST /v1/invoices`).

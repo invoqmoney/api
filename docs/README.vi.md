@@ -12,6 +12,12 @@ Thanh toán stablecoin cho lập trình viên độc lập. Không giữ hộ ti
 - **Trang thanh toán được lưu trữ sẵn:** `https://pay.invoq.money/<id hóa đơn>`
 - **Bảng điều khiển** (khóa API, ví nhận tiền, webhook): `https://app.invoq.money`
 
+**Đang code bằng AI? Dán câu này.**
+
+```
+Thêm thanh toán stablecoin vào dự án của tôi bằng invoq. Bắt đầu ở chế độ thử nghiệm. Đọc tài liệu trước khi viết code: https://invoq.money/llms.txt
+```
+
 ## Cách hoạt động
 
 1. **Tạo hóa đơn** từ máy chủ của bạn (`POST /v1/invoices`).

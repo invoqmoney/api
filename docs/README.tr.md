@@ -12,6 +12,12 @@ Burası invoq'un herkese açık REST API'sinin referansı. Resmî SDK'lar — [N
 - **Barındırılan ödeme sayfası:** `https://pay.invoq.money/<fatura id>`
 - **Panel** (API anahtarları, tahsilat cüzdanı, webhook'lar): `https://app.invoq.money`
 
+**AI ile mi kod yazıyorsunuz? Bunu yapıştırın.**
+
+```
+invoq ile projeme stablecoin ödemesi ekle. Test modunda başla. Kod yazmadan önce belgeleri oku: https://invoq.money/llms.txt
+```
+
 ## Nasıl çalışır
 
 1. Sunucunuzdan **bir fatura oluşturun** (`POST /v1/invoices`).

@@ -12,6 +12,12 @@
 - **託管結帳頁**：`https://pay.invoq.money/<invoice id>`
 - **商家後台**（API 金鑰、收款錢包、webhook）：`https://app.invoq.money`
 
+**在用 AI 寫程式？把這段貼給它。**
+
+```
+用 invoq 幫我的專案串接穩定幣收款，從測試模式開始。寫程式前先讀文件 https://invoq.money/llms.txt
+```
+
 ## 運作方式
 
 1. 在你的伺服器上**建立帳單**（`POST /v1/invoices`）。
