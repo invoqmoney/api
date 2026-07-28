@@ -4,7 +4,7 @@
 
 > Bu belge İngilizce README'nin çevirisidir; bir fark olursa [İngilizce sürüm](../README.md) esas alınır.
 
-Bağımsız geliştiriciler için stablecoin ödemeleri. Saklamasız — para doğrudan kendi cüzdanınıza geçer.
+Ürününüze entegre stablecoin ödemeleri. Saklamasız — para doğrudan kendi cüzdanınıza geçer.
 
 Burası invoq'un herkese açık REST API'sinin referansı. Resmî SDK'lar — [Node.js](https://github.com/invoqmoney/sdk-js), [Python](https://github.com/invoqmoney/sdk-python), [PHP](https://github.com/invoqmoney/sdk-php), [Go](https://github.com/invoqmoney/sdk-go), [Rust](https://github.com/invoqmoney/sdk-rust), [Ruby](https://github.com/invoqmoney/sdk-ruby) — tam olarak bu uç noktaları sarmalar.
 

@@ -4,7 +4,7 @@
 
 > เอกสารนี้แปลจาก README ภาษาอังกฤษ หากมีข้อความไม่ตรงกัน ให้ยึด[ฉบับภาษาอังกฤษ](../README.md)เป็นหลัก
 
-รับชำระเงินด้วย stablecoin สำหรับนักพัฒนาอิสระ ไม่ถือเงินแทนคุณ — เงินเข้ากระเป๋าของคุณโดยตรง
+รับชำระเงินด้วย stablecoin เชื่อมต่อเข้ากับระบบของคุณ ไม่ถือเงินแทนคุณ — เงินเข้ากระเป๋าของคุณโดยตรง
 
 นี่คือเอกสารอ้างอิงของ REST API สาธารณะของ invoq โดย SDK ทางการ — [Node.js](https://github.com/invoqmoney/sdk-js), [Python](https://github.com/invoqmoney/sdk-python), [PHP](https://github.com/invoqmoney/sdk-php), [Go](https://github.com/invoqmoney/sdk-go), [Rust](https://github.com/invoqmoney/sdk-rust), [Ruby](https://github.com/invoqmoney/sdk-ruby) — ห่อหุ้มปลายทางเหล่านี้ตรง ๆ
 

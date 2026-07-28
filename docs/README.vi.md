@@ -4,7 +4,7 @@
 
 > Tài liệu này được dịch từ README tiếng Anh; nếu có chỗ khác nhau, [bản tiếng Anh](../README.md) là bản chuẩn.
 
-Thanh toán stablecoin cho lập trình viên độc lập. Không giữ hộ tiền — tiền về thẳng ví của bạn.
+Thanh toán stablecoin, tích hợp vào sản phẩm của bạn. Không giữ hộ tiền — tiền về thẳng ví của bạn.
 
 Đây là tài liệu tham chiếu cho REST API công khai của invoq. Các SDK chính thức — [Node.js](https://github.com/invoqmoney/sdk-js), [Python](https://github.com/invoqmoney/sdk-python), [PHP](https://github.com/invoqmoney/sdk-php), [Go](https://github.com/invoqmoney/sdk-go), [Rust](https://github.com/invoqmoney/sdk-rust), [Ruby](https://github.com/invoqmoney/sdk-ruby) — bọc đúng những endpoint này.
 

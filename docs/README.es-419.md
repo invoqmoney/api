@@ -4,7 +4,7 @@
 
 > Este documento es una traducción del README en inglés; si algo difiere, vale la [versión en inglés](../README.md).
 
-Pagos con stablecoins para desarrolladores independientes. Sin custodia: los fondos llegan directo a tu billetera.
+Pagos en stablecoins, integrados en tu producto. Sin custodia: los fondos llegan directo a tu billetera.
 
 Esta es la referencia de la API REST pública de invoq. Los SDK oficiales — [Node.js](https://github.com/invoqmoney/sdk-js), [Python](https://github.com/invoqmoney/sdk-python), [PHP](https://github.com/invoqmoney/sdk-php), [Go](https://github.com/invoqmoney/sdk-go), [Rust](https://github.com/invoqmoney/sdk-rust), [Ruby](https://github.com/invoqmoney/sdk-ruby) — envuelven exactamente estos endpoints.
 

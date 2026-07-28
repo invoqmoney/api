@@ -4,7 +4,7 @@
 
 > Dokumen ini terjemahan dari README bahasa Inggris; kalau ada perbedaan, [versi bahasa Inggris](../README.md) yang berlaku.
 
-Pembayaran stablecoin untuk developer indie. Non-kustodial — dana langsung masuk ke dompet Anda sendiri.
+Pembayaran stablecoin, terintegrasi ke produk Anda. Non-kustodial — dana langsung masuk ke dompet Anda sendiri.
 
 Ini referensi REST API publik invoq. SDK resmi — [Node.js](https://github.com/invoqmoney/sdk-js), [Python](https://github.com/invoqmoney/sdk-python), [PHP](https://github.com/invoqmoney/sdk-php), [Go](https://github.com/invoqmoney/sdk-go), [Rust](https://github.com/invoqmoney/sdk-rust), [Ruby](https://github.com/invoqmoney/sdk-ruby) — membungkus persis endpoint-endpoint ini.
 

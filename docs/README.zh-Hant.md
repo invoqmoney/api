@@ -4,7 +4,7 @@
 
 > 本文是英文版 README 的繁體中文翻譯；若表述有出入，以[英文版](../README.md)為準。
 
-為獨立開發者打造的穩定幣收款。非託管——資金直接結算到你自己的錢包。
+穩定幣收款，串接到你的產品。非託管——資金直接結算到你自己的錢包。
 
 這是 invoq 公開 REST API 的參考文件。官方 SDK（[Node.js](https://github.com/invoqmoney/sdk-js)、[Python](https://github.com/invoqmoney/sdk-python)、[PHP](https://github.com/invoqmoney/sdk-php)、[Go](https://github.com/invoqmoney/sdk-go)、[Rust](https://github.com/invoqmoney/sdk-rust)、[Ruby](https://github.com/invoqmoney/sdk-ruby)）包裝的正是這些端點。
 
