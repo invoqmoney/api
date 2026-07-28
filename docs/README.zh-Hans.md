@@ -344,7 +344,7 @@ Content-Type: application/json
 Invoq-Signature: t=...,v1=...
 ```
 
-`t` 是 Unix 时间戳（秒）。`v1` 是用对应模式的 webhook 密钥对 `<t>.<raw_body>` 做 HMAC-SHA256 后的小写十六进制值。请在解析之前对**原始请求体**验签——把 JSON 重新序列化会改变字节，从而让签名失效。同时拒绝超出你重放容忍窗口的时间戳。官方 SDK 都提供了 `verifyWebhook` 辅助函数。
+`t` 是 Unix 时间戳（秒）。`v1` 是用对应模式的 webhook 密钥对 `<t>.<raw_body>` 做 HMAC-SHA256 后的小写十六进制值。请在解析之前对**原始请求体**验签——把 JSON 重新序列化会改变字节，从而让签名失效。同时拒绝超出你重放容忍窗口的时间戳。官方 SDK 都提供了这个验签函数，各自按本语言的命名习惯（`verifyWebhook`、`verify_webhook`、`VerifyWebhook`）。
 
 ### 投递与重试
 

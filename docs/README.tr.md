@@ -344,7 +344,7 @@ Content-Type: application/json
 Invoq-Signature: t=...,v1=...
 ```
 
-`t`, saniye cinsinden bir Unix zaman damgasıdır. `v1` ise `<t>.<raw_body>` değerinin, ilgili modun webhook gizli anahtarıyla üretilmiş küçük harfli onaltılık HMAC-SHA256 imzasıdır. Ayrıştırmadan önce **ham istek gövdesine** karşı doğrulayın — JSON'u yeniden serileştirmek baytları değiştirip imzayı geçersiz kılabilir. Yeniden oynatma toleransı pencerenizin dışındaki zaman damgalarını reddedin. Resmî SDK'lar bir `verifyWebhook` yardımcısıyla gelir.
+`t`, saniye cinsinden bir Unix zaman damgasıdır. `v1` ise `<t>.<raw_body>` değerinin, ilgili modun webhook gizli anahtarıyla üretilmiş küçük harfli onaltılık HMAC-SHA256 imzasıdır. Ayrıştırmadan önce **ham istek gövdesine** karşı doğrulayın — JSON'u yeniden serileştirmek baytları değiştirip imzayı geçersiz kılabilir. Yeniden oynatma toleransı pencerenizin dışındaki zaman damgalarını reddedin. Resmî SDK'ların her biri bu doğrulamayı, kendi dilinin adlandırmasıyla sunar (`verifyWebhook`, `verify_webhook`, `VerifyWebhook`).
 
 ### Teslimat ve yeniden denemeler
 

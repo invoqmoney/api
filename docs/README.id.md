@@ -344,7 +344,7 @@ Content-Type: application/json
 Invoq-Signature: t=...,v1=...
 ```
 
-`t` adalah timestamp Unix dalam detik. `v1` adalah HMAC-SHA256 heksadesimal huruf kecil dari `<t>.<raw_body>`, memakai secret webhook mode terkait. Verifikasi terhadap **body mentah** sebelum mem-parsing — menserialisasi ulang JSON bisa mengubah byte-nya dan membuat tanda tangan tidak valid. Tolak timestamp di luar jendela toleransi replay Anda. SDK resmi menyertakan helper `verifyWebhook`.
+`t` adalah timestamp Unix dalam detik. `v1` adalah HMAC-SHA256 heksadesimal huruf kecil dari `<t>.<raw_body>`, memakai secret webhook mode terkait. Verifikasi terhadap **body mentah** sebelum mem-parsing — menserialisasi ulang JSON bisa mengubah byte-nya dan membuat tanda tangan tidak valid. Tolak timestamp di luar jendela toleransi replay Anda. Setiap SDK resmi menyertakan pemeriksaan ini, dengan nama sesuai bahasanya (`verifyWebhook`, `verify_webhook`, `VerifyWebhook`).
 
 ### Pengiriman dan percobaan ulang
 

@@ -344,7 +344,7 @@ Content-Type: application/json
 Invoq-Signature: t=...,v1=...
 ```
 
-`t` là dấu thời gian Unix tính bằng giây. `v1` là HMAC-SHA256 dạng hex chữ thường của `<t>.<raw_body>`, dùng khóa webhook của chế độ tương ứng. Hãy xác minh trên **thân request thô** trước khi phân tích cú pháp — tuần tự hóa lại JSON có thể làm đổi byte và khiến chữ ký sai. Đồng thời hãy từ chối các dấu thời gian nằm ngoài khoảng dung sai chống phát lại của bạn. Các SDK chính thức đều có sẵn hàm `verifyWebhook`.
+`t` là dấu thời gian Unix tính bằng giây. `v1` là HMAC-SHA256 dạng hex chữ thường của `<t>.<raw_body>`, dùng khóa webhook của chế độ tương ứng. Hãy xác minh trên **thân request thô** trước khi phân tích cú pháp — tuần tự hóa lại JSON có thể làm đổi byte và khiến chữ ký sai. Đồng thời hãy từ chối các dấu thời gian nằm ngoài khoảng dung sai chống phát lại của bạn. Mọi SDK chính thức đều có sẵn hàm này, đặt tên theo quy ước của từng ngôn ngữ (`verifyWebhook`, `verify_webhook`, `VerifyWebhook`).
 
 ### Cơ chế gửi và gửi lại
 

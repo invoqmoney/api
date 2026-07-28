@@ -344,7 +344,7 @@ Content-Type: application/json
 Invoq-Signature: t=...,v1=...
 ```
 
-`t` é um timestamp Unix em segundos. `v1` é o HMAC-SHA256 em hexadecimal minúsculo de `<t>.<raw_body>`, com o segredo de webhook daquele modo. Verifique contra o **corpo cru** da requisição antes de parsear: reserializar o JSON pode mudar os bytes e invalidar a assinatura. Rejeite timestamps fora da sua janela de tolerância a replay. Os SDKs oficiais trazem um helper `verifyWebhook`.
+`t` é um timestamp Unix em segundos. `v1` é o HMAC-SHA256 em hexadecimal minúsculo de `<t>.<raw_body>`, com o segredo de webhook daquele modo. Verifique contra o **corpo cru** da requisição antes de parsear: reserializar o JSON pode mudar os bytes e invalidar a assinatura. Rejeite timestamps fora da sua janela de tolerância a replay. Cada SDK oficial traz essa verificação, com o nome próprio da sua linguagem (`verifyWebhook`, `verify_webhook`, `VerifyWebhook`).
 
 ### Entrega e novas tentativas
 
