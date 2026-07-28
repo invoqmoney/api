@@ -11,6 +11,7 @@ Ini referensi REST API publik invoq. SDK resmi — [Node.js](https://github.com/
 - **Base URL:** `https://api.invoq.money`
 - **Checkout ter-hosting:** `https://pay.invoq.money/<id invoice>`
 - **Dashboard** (kunci API, dompet penerima, webhook): `https://app.invoq.money`
+- **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — kontrak ini, dalam bentuk yang bisa dibaca mesin
 
 **Coding pakai AI? Tempelkan ini.**
 
@@ -97,6 +98,7 @@ Beberapa konvensi yang sebaiknya diketahui:
 - Body request dibatasi 4KB; lebih dari itu menjadi `413 request_body_too_large`.
 - Setiap respons JSON membawa `Cache-Control: no-store` — status pembayaran di-polling, jadi tidak boleh ada yang menyodorkan invoice basi.
 - `GET /` adalah liveness probe tanpa autentikasi. Ia mengembalikan `204 No Content`.
+- `GET /openapi.json` menyajikan kontrak ini — ketiga endpoint dan kedua webhook — sebagai OpenAPI 3.1. Dokumen itu dibangun dari skema yang dipakai API untuk memvalidasi, jadi tidak mungkin menggambarkan server yang berbeda. Pakai untuk membuat klien di bahasa yang belum punya SDK.
 
 Pembuatan invoice dibatasi per proyek: produksi 3.000/menit dan 100.000/hari, uji coba 300/menit dan 10.000/hari.
 
@@ -121,6 +123,8 @@ Pembuatan invoice dibatasi per proyek: produksi 3.000/menit dan 100.000/hari, uj
 | `return_url` | URL `http(s)` opsional, maksimal 1000 karakter — tombol kembali ke merchant yang ditampilkan setelah pembayaran. Jika dihilangkan, nilai default proyek di-snapshot ke invoice; kirim `null` atau `""` kalau tidak mau ada URL kembali. Pada pengulangan dengan `reference_id`, `return_url` yang dihilangkan tidak dicek terhadap invoice yang ada, jadi kirimkan secara eksplisit bila pengulangan itu harus menegaskan suatu nilai. |
 
 `201 Created`, atau `200 OK` pada pemakaian ulang idempoten:
+
+> SDK resmi hanya mengembalikan resource-nya dan membuang `meta.result`, jadi lewat SDK sebuah create dan pemakaian ulang idempoten tidak bisa dibedakan — dan itulah gunanya `reference_id`. Sandarkan pembukuanmu pada `reference_id` yang kamu kirim; panggil endpoint-nya langsung kalau kamu butuh pembedaan itu.
 
 ```json
 {
@@ -243,7 +247,7 @@ Identifikasi sebuah opsi lewat (`chain_namespace`, `chain_reference`, `token_add
 { "deposit_address": "0x20c124f3919bb502c6126cda5bd6e5287859d5ca", "suggested_amount": "12.340000" }
 ```
 
-Setiap transfer positif yang tiba tepat waktu dikreditkan sebesar nominalnya. `suggested_amount` hanyalah panduan, bukan syarat pencocokan: nilainya `max(0, amount_due − pending)` yang dibulatkan **ke atas** ke jumlah desimal jalur tersebut, jadi bisa melebihi `amount_due` sampai satu satuan token. Jangan berasumsi keduanya sama.
+Setiap transfer positif yang tiba tepat waktu dikreditkan sebesar nominalnya. `suggested_amount` hanyalah panduan, bukan syarat pencocokan: nilainya `max(0, amount_due − pending)` yang dibulatkan **ke atas** ke `token_decimals`, atau ke 6 digit bila jalur itu membawa lebih — angka ini diketik ulang oleh manusia — lalu ditambahi nol sampai `token_decimals`. Jadi bisa melebihi `amount_due` sampai `0.000001`. Jangan berasumsi keduanya sama.
 
 **`direct_exact`** — alamat Solana atau TRON Anda ditambah satu nominal eksak:
 

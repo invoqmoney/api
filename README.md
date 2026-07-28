@@ -9,6 +9,7 @@ This is the reference for invoq's public REST API. The official SDKs — [Node.j
 - **Base URL:** `https://api.invoq.money`
 - **Hosted checkout:** `https://pay.invoq.money/<invoice id>`
 - **Dashboard** (API keys, receiving wallet, webhooks): `https://app.invoq.money`
+- **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — this contract, machine-readable
 
 **Coding with AI? Paste this.**
 
@@ -95,6 +96,7 @@ Conventions worth knowing:
 - Request bodies are limited to 4KB; anything larger is `413 request_body_too_large`.
 - Every JSON response carries `Cache-Control: no-store` — payment state is polled, so nothing may serve you a stale invoice.
 - `GET /` is an unauthenticated liveness probe. It returns `204 No Content`.
+- `GET /openapi.json` serves this contract — all three endpoints and both webhooks — as OpenAPI 3.1. It is built from the schemas the API validates with, so it cannot describe a different server. Use it to generate a client for a language with no SDK.
 
 Invoice creation is rate limited per project: live 3,000/minute and 100,000/day, test 300/minute and 10,000/day.
 
@@ -119,6 +121,8 @@ Invoice creation is rate limited per project: live 3,000/minute and 100,000/day,
 | `return_url` | Optional `http(s)` URL, max 1000 chars — the merchant return button shown after payment. Omit it and the project's default is snapshotted; pass `null` or `""` for no return URL. On a `reference_id` retry an omitted `return_url` is not checked against the existing invoice, so pass it explicitly when the retry must assert a value. |
 
 `201 Created`, or `200 OK` on idempotent reuse:
+
+> The official SDKs return the resource alone and drop `meta.result`, so a create and an idempotent reuse are indistinguishable through them — which is what `reference_id` is for. Key your bookkeeping on the `reference_id` you sent; call the endpoint directly if you need the distinction.
 
 ```json
 {
@@ -241,7 +245,7 @@ Identify an option by (`chain_namespace`, `chain_reference`, `token_address`) �
 { "deposit_address": "0x20c124f3919bb502c6126cda5bd6e5287859d5ca", "suggested_amount": "12.340000" }
 ```
 
-Any positive, on-time transfer to it credits the invoice by its amount. `suggested_amount` is guidance, not a match requirement: it's `max(0, amount_due − pending)` rounded **up** to the rail's decimals, so it can exceed `amount_due` by up to one token unit. Don't assert the two are equal.
+Any positive, on-time transfer to it credits the invoice by its amount. `suggested_amount` is guidance, not a match requirement: it's `max(0, amount_due − pending)` rounded **up** to `token_decimals`, or to 6 digits where the rail carries more — a person retypes this figure — then zero-padded back to `token_decimals`. So it can exceed `amount_due` by as much as `0.000001`. Don't assert the two are equal.
 
 **`direct_exact`** — your Solana or TRON address plus an exact amount:
 

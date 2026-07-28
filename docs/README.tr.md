@@ -11,6 +11,7 @@ Burası invoq'un herkese açık REST API'sinin referansı. Resmî SDK'lar — [N
 - **Temel URL:** `https://api.invoq.money`
 - **Barındırılan ödeme sayfası:** `https://pay.invoq.money/<fatura id>`
 - **Panel** (API anahtarları, tahsilat cüzdanı, webhook'lar): `https://app.invoq.money`
+- **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — bu sözleşmenin makine tarafından okunabilir hâli
 
 **AI ile mi kod yazıyorsunuz? Bunu yapıştırın.**
 
@@ -97,6 +98,7 @@ Bilinmesi iyi olan birkaç kural:
 - İstek gövdesi 4KB ile sınırlıdır; fazlası `413 request_body_too_large` olur.
 - Her JSON yanıtı `Cache-Control: no-store` taşır — ödeme durumu yoklanarak izlenir, dolayısıyla kimse size bayat bir fatura veremez.
 - `GET /`, kimlik doğrulaması olmayan bir canlılık yoklamasıdır. `204 No Content` döndürür.
+- `GET /openapi.json`, bu sözleşmeyi — her üç uç noktayı ve iki webhook'u — OpenAPI 3.1 olarak sunar. API'nin doğrulama için kullandığı şemalardan üretilir, dolayısıyla başka bir sunucuyu anlatamaz. SDK'sı olmayan bir dil için istemci üretmekte kullanın.
 
 Fatura oluşturma proje başına sınırlıdır: canlı 3.000/dakika ve 100.000/gün, test 300/dakika ve 10.000/gün.
 
@@ -121,6 +123,8 @@ Fatura oluşturma proje başına sınırlıdır: canlı 3.000/dakika ve 100.000/
 | `return_url` | İsteğe bağlı `http(s)` URL'si, en fazla 1000 karakter — ödemeden sonra gösterilen satıcıya dönüş düğmesi. Vermezseniz projenin varsayılanı faturaya kopyalanır; dönüş URL'si istemiyorsanız `null` veya `""` gönderin. `reference_id` ile yeniden denemede, verilmeyen bir `return_url` mevcut faturaya karşı doğrulanmaz; o yüzden yeniden denemenin belirli bir değeri dayatması gerekiyorsa açıkça gönderin. |
 
 `201 Created`, ya da idempotent yeniden kullanımda `200 OK`:
+
+> Resmî SDK'lar yalnızca kaynağın kendisini döndürür ve `meta.result`'ı atar; dolayısıyla SDK üzerinden bir create ile idempotent yeniden kullanım ayırt edilemez — `reference_id`'nin amacı da budur. Kayıtlarınızı gönderdiğiniz `reference_id` üzerine kurun; ayrım gerçekten gerekiyorsa uç noktayı doğrudan çağırın.
 
 ```json
 {
@@ -243,7 +247,7 @@ Ayırt edici alan `collection_method`'dur.
 { "deposit_address": "0x20c124f3919bb502c6126cda5bd6e5287859d5ca", "suggested_amount": "12.340000" }
 ```
 
-Zamanında gelen her pozitif transfer, tutarı kadar faturaya sayılır. `suggested_amount` bir eşleşme şartı değil, yönlendirmedir: `max(0, amount_due − pending)` değerinin hattın ondalık basamağına **yukarı** yuvarlanmış hâlidir, dolayısıyla `amount_due` değerini bir token birimine kadar aşabilir. İkisinin eşit olduğunu varsaymayın.
+Zamanında gelen her pozitif transfer, tutarı kadar faturaya sayılır. `suggested_amount` bir eşleşme şartı değil, yönlendirmedir: `max(0, amount_due − pending)` değerinin `token_decimals` basamağına — hat daha fazlasını taşıyorsa 6 basamağa, çünkü bu rakamı bir insan elle yeniden yazıyor — **yukarı** yuvarlanmış, ardından `token_decimals` uzunluğuna sıfırla tamamlanmış hâlidir. Dolayısıyla `amount_due` değerini `0.000001` kadar aşabilir. İkisinin eşit olduğunu varsaymayın.
 
 **`direct_exact`** — Solana veya TRON adresiniz ve kesin bir tutar:
 

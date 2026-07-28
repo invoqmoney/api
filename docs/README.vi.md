@@ -11,6 +11,7 @@ Thanh toán stablecoin cho lập trình viên độc lập. Không giữ hộ ti
 - **Base URL:** `https://api.invoq.money`
 - **Trang thanh toán được lưu trữ sẵn:** `https://pay.invoq.money/<id hóa đơn>`
 - **Bảng điều khiển** (khóa API, ví nhận tiền, webhook): `https://app.invoq.money`
+- **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — chính hợp đồng này, ở dạng máy đọc được
 
 **Đang code bằng AI? Dán câu này.**
 
@@ -97,6 +98,7 @@ Vài quy ước nên biết:
 - Thân request giới hạn 4KB; vượt quá sẽ là `413 request_body_too_large`.
 - Mọi phản hồi JSON đều kèm `Cache-Control: no-store` — trạng thái thanh toán được hỏi liên tục, nên không nơi nào được trả cho bạn một hóa đơn cũ.
 - `GET /` là endpoint kiểm tra sống không cần xác thực. Nó trả về `204 No Content`.
+- `GET /openapi.json` phục vụ chính hợp đồng này — cả ba endpoint và cả hai webhook — dưới dạng OpenAPI 3.1. Nó được dựng từ đúng các schema mà API dùng để kiểm tra, nên không thể mô tả một máy chủ khác. Dùng nó để sinh client cho ngôn ngữ chưa có SDK.
 
 Việc tạo hóa đơn bị giới hạn tần suất theo dự án: chạy thật 3.000/phút và 100.000/ngày, thử nghiệm 300/phút và 10.000/ngày.
 
@@ -121,6 +123,8 @@ Việc tạo hóa đơn bị giới hạn tần suất theo dự án: chạy th�
 | `return_url` | URL `http(s)` tùy chọn, tối đa 1000 ký tự — nút quay lại cửa hàng hiển thị sau khi thanh toán. Nếu bỏ trống, giá trị mặc định của dự án được chụp lại vào hóa đơn; truyền `null` hoặc `""` nếu không muốn có URL quay lại. Khi thử lại bằng `reference_id`, một `return_url` bị bỏ trống sẽ không được đối chiếu với hóa đơn đã có, nên hãy truyền tường minh khi lần thử lại đó cần khẳng định một giá trị. |
 
 `201 Created`, hoặc `200 OK` khi dùng lại theo cơ chế idempotent:
+
+> Các SDK chính thức chỉ trả về bản thân tài nguyên và bỏ `meta.result`, nên qua SDK thì một lần tạo mới và một lần dùng lại idempotent là không phân biệt được — đó chính là mục đích của `reference_id`. Hãy dựa sổ sách của bạn trên `reference_id` đã gửi; gọi thẳng endpoint khi bạn thực sự cần phân biệt.
 
 ```json
 {
@@ -243,7 +247,7 @@ Hãy nhận diện một tùy chọn bằng bộ (`chain_namespace`, `chain_refe
 { "deposit_address": "0x20c124f3919bb502c6126cda5bd6e5287859d5ca", "suggested_amount": "12.340000" }
 ```
 
-Mọi khoản chuyển dương đến trong thời hạn đều được ghi có theo đúng số tiền của nó. `suggested_amount` chỉ là gợi ý, không phải yêu cầu khớp số tiền: nó là `max(0, amount_due − pending)` được làm tròn **lên** theo số chữ số thập phân của tuyến, nên có thể lớn hơn `amount_due` tối đa một đơn vị token. Đừng cho rằng hai giá trị này bằng nhau.
+Mọi khoản chuyển dương đến trong thời hạn đều được ghi có theo đúng số tiền của nó. `suggested_amount` chỉ là gợi ý, không phải yêu cầu khớp số tiền: nó là `max(0, amount_due − pending)` được làm tròn **lên** theo `token_decimals`, hoặc tới 6 chữ số khi tuyến đó có nhiều hơn — con số này do người gõ lại bằng tay — rồi đệm số 0 trở lại đủ `token_decimals`. Nên nó có thể lớn hơn `amount_due` tối đa `0.000001`. Đừng cho rằng hai giá trị này bằng nhau.
 
 **`direct_exact`** — địa chỉ Solana hoặc TRON của bạn kèm một số tiền chính xác:
 

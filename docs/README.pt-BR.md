@@ -11,6 +11,7 @@ Esta é a referência da API REST pública da invoq. Os SDKs oficiais — [Node.
 - **URL base:** `https://api.invoq.money`
 - **Checkout hospedado:** `https://pay.invoq.money/<id da fatura>`
 - **Painel** (chaves de API, carteira de recebimento, webhooks): `https://app.invoq.money`
+- **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — este contrato, legível por máquina
 
 **Programa com IA? Cole isto.**
 
@@ -97,6 +98,7 @@ Algumas convenções que vale conhecer:
 - O corpo da requisição é limitado a 4KB; acima disso é `413 request_body_too_large`.
 - Toda resposta JSON leva `Cache-Control: no-store` — o estado do pagamento é consultado por polling, então nada pode te entregar uma fatura desatualizada.
 - `GET /` é uma sonda de disponibilidade sem autenticação. Retorna `204 No Content`.
+- `GET /openapi.json` serve este contrato — os três endpoints e os dois webhooks — como OpenAPI 3.1. Ele é construído a partir dos mesmos schemas com que a API valida, então não pode descrever um servidor diferente. Use-o para gerar um cliente em uma linguagem sem SDK.
 
 A criação de faturas tem limites por projeto: produção 3.000/minuto e 100.000/dia, teste 300/minuto e 10.000/dia.
 
@@ -121,6 +123,8 @@ A criação de faturas tem limites por projeto: produção 3.000/minuto e 100.00
 | `return_url` | URL `http(s)` opcional, no máximo 1000 caracteres — o botão de voltar à loja exibido após o pagamento. Se omitir, o padrão do projeto é congelado na fatura; passe `null` ou `""` para não ter URL de retorno. Numa repetição por `reference_id`, uma `return_url` omitida não é comparada com a fatura existente, então passe-a explicitamente quando a repetição precisar afirmar um valor. |
 
 `201 Created`, ou `200 OK` no reuso idempotente:
+
+> Os SDKs oficiais devolvem apenas o recurso e descartam `meta.result`, então por meio deles um create e um reuso idempotente são indistinguíveis — que é justamente para isso que serve o `reference_id`. Baseie sua contabilidade no `reference_id` que você enviou; chame o endpoint diretamente se precisar da distinção.
 
 ```json
 {
@@ -243,7 +247,7 @@ Identifique uma opção por (`chain_namespace`, `chain_reference`, `token_addres
 { "deposit_address": "0x20c124f3919bb502c6126cda5bd6e5287859d5ca", "suggested_amount": "12.340000" }
 ```
 
-Qualquer transferência positiva dentro do prazo credita a fatura pelo seu valor. `suggested_amount` é orientação, não exigência de correspondência: é `max(0, amount_due − pending)` arredondado **para cima** às casas decimais da via, então pode exceder `amount_due` em até uma unidade de token. Não assuma que os dois são iguais.
+Qualquer transferência positiva dentro do prazo credita a fatura pelo seu valor. `suggested_amount` é orientação, não exigência de correspondência: é `max(0, amount_due − pending)` arredondado **para cima** para `token_decimals`, ou para 6 dígitos quando a via carrega mais — alguém redigita esse número à mão — e então completado com zeros até `token_decimals`. Então pode exceder `amount_due` em até `0.000001`. Não assuma que os dois são iguais.
 
 **`direct_exact`** — seu endereço Solana ou TRON mais um valor exato:
 

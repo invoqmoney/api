@@ -11,6 +11,7 @@
 - **Base URL：**`https://api.invoq.money`
 - **托管收银页：**`https://pay.invoq.money/<账单 id>`
 - **商户后台**（API 密钥、收款钱包、webhook）：`https://app.invoq.money`
+- **OpenAPI 3.1**：`https://api.invoq.money/openapi.json` —— 同一份契约的机器可读版
 
 **在用 AI 写代码？把这段贴给它。**
 
@@ -97,6 +98,7 @@ Authorization: Bearer sk_test_...
 - 请求体上限 4KB，超过返回 `413 request_body_too_large`。
 - 每个 JSON 响应都带 `Cache-Control: no-store`——付款状态靠轮询，任何环节都不能给你一份过期的账单。
 - `GET /` 是无需认证的存活探针，返回 `204 No Content`。
+- `GET /openapi.json` 以 OpenAPI 3.1 提供这份契约：三个端点和两个 webhook。它由 API 自己用来校验的 schema 生成，因此不可能描述成另一台服务器。没有 SDK 的语言可以用它生成客户端。
 
 创建账单的速率限制按项目计：正式 3,000 次/分钟、100,000 次/天，测试 300 次/分钟、10,000 次/天。
 
@@ -121,6 +123,8 @@ Authorization: Bearer sk_test_...
 | `return_url` | 可选 `http(s)` URL，最长 1000 字符——付款完成后展示的返回商户按钮。省略则快照项目的默认值；传 `null` 或 `""` 表示不要返回链接。用 `reference_id` 重试时，省略的 `return_url` 不会和已有账单做校验，所以当重试需要断言某个值时请显式传入。 |
 
 `201 Created`，幂等复用时为 `200 OK`：
+
+> 官方 SDK 只返回资源本身，会丢掉 `meta.result`，所以经过 SDK 时「新建」和「幂等复用」分不出来——这正是 `reference_id` 的用处。把账目挂在你发出去的那个 `reference_id` 上；确实需要区分时，直接调这个端点。
 
 ```json
 {
@@ -243,7 +247,7 @@ Authorization: Bearer sk_test_...
 { "deposit_address": "0x20c124f3919bb502c6126cda5bd6e5287859d5ca", "suggested_amount": "12.340000" }
 ```
 
-任何在时限内到账的正数转账都按其金额入账。`suggested_amount` 只是建议值，不是匹配要求：它是 `max(0, amount_due − pending)` 按该通道的小数位**向上**取整，因此可能比 `amount_due` 多出最多一个代币最小单位。不要断言两者相等。
+任何在时限内到账的正数转账都按其金额入账。`suggested_amount` 只是建议值，不是匹配要求：它是 `max(0, amount_due − pending)` 按 `token_decimals` **向上**取整，通道小数位超过 6 位时只取到 6 位（这串数字要人手抄），再补零回 `token_decimals`。因此它可能比 `amount_due` 多出最多 `0.000001`。不要断言两者相等。
 
 **`direct_exact`**——你的 Solana 或 TRON 地址搭配一个精确金额：
 
