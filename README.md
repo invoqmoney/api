@@ -48,6 +48,84 @@ curl https://api.invoq.money/v1/invoices/<id>/test-payments \
 
 If you've set a test webhook URL in the dashboard, it receives a signed `invoice.paid`. That's the whole loop — the rest of this document is the detail.
 
+## Worked Node.js integration
+
+The REST API works from any server language. For Node.js, the official SDK turns the same three calls into typed methods:
+
+```bash
+npm install @invoq/server
+```
+
+Create an invoice on your server. Keep the amount server-side, use your order id as `reference_id`, and start with an `sk_test_...` key:
+
+```ts
+import { Invoq } from '@invoq/server'
+
+const apiKey = process.env.INVOQ_SECRET_KEY
+if (!apiKey) throw new Error('INVOQ_SECRET_KEY is required')
+
+const invoq = new Invoq(apiKey)
+const invoice = await invoq.invoices.create({
+  amount: '12.34',
+  description: 'Website audit for June',
+  reference_id: 'order_10086',
+  return_url: 'https://example.com/orders/order_10086',
+})
+
+const checkoutUrl = `https://pay.invoq.money/${invoice.id}`
+```
+
+Receive and verify the webhook against the raw request body. This example uses the Web Fetch API request shape used by Next.js App Router and similar server frameworks:
+
+```ts
+import {
+  isInvoicePaid,
+  isInvoicePaymentReversed,
+  verifyWebhook,
+} from '@invoq/server'
+
+const webhookSecret = process.env.INVOQ_WEBHOOK_SECRET
+if (!webhookSecret) throw new Error('INVOQ_WEBHOOK_SECRET is required')
+
+export async function POST(request: Request) {
+  let event: ReturnType<typeof verifyWebhook>
+
+  try {
+    event = verifyWebhook(
+      await request.text(),
+      request.headers,
+      webhookSecret,
+    )
+  } catch {
+    return Response.json({ error: 'invalid signature' }, { status: 400 })
+  }
+
+  if (isInvoicePaid(event)) {
+    // Persist event.id and payment_revision idempotently, then enqueue
+    // fulfillment for event.data.invoice.reference_id.
+  } else if (isInvoicePaymentReversed(event)) {
+    // Hold or reverse fulfillment according to your business policy.
+  }
+
+  return Response.json({ received: true })
+}
+```
+
+Do not parse the webhook as JSON before `verifyWebhook`: re-serializing it can change the signed bytes. Make the event write idempotent, keep the highest `payment_revision`, enqueue business work durably, and return `2xx` within 10 seconds.
+
+Finally, drive the full flow without moving funds. This creates a real signed webhook delivery when your test webhook URL is configured:
+
+```ts
+const paidInvoice = await invoq.invoices.createTestPayment(invoice.id, {
+  amount: invoice.amount,
+  reference_id: 'test_payment_order_10086',
+})
+
+console.log(paidInvoice.status) // "paid"
+```
+
+The other official SDK repositories linked above contain the same create, test-payment, and webhook-verification flow in Python, PHP, Go, Rust, and Ruby.
+
 ## Authentication
 
 Server endpoints take a secret API key created in the dashboard:
