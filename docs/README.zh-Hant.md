@@ -10,7 +10,6 @@
 
 - **Base URL**：`https://api.invoq.money`
 - **託管結帳頁**：`https://pay.invoq.money/<invoice id>`
-- **商家後台**（API 金鑰、收款錢包、webhook）：`https://app.invoq.money`
 - **OpenAPI 3.1**：`https://api.invoq.money/openapi.json` —— 同一份契約的機器可讀版
 
 **在用 AI 寫程式？把這段貼給它。**

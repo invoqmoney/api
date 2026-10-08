@@ -10,7 +10,6 @@
 
 - **Base URL:** `https://api.invoq.money`
 - **หน้าชำระเงินที่โฮสต์ให้:** `https://pay.invoq.money/<invoice id>`
-- **แดชบอร์ด** (คีย์ API, กระเป๋าเงินสำหรับรับเงิน, webhook): `https://app.invoq.money`
 - **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — สัญญาฉบับนี้ในรูปแบบที่เครื่องอ่านได้
 
 **ใช้ AI เขียนโค้ดอยู่ไหม วางข้อความนี้**

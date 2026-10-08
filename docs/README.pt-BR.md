@@ -10,7 +10,6 @@ Esta é a referência da API REST pública da invoq. Os SDKs oficiais — [Node.
 
 - **URL base:** `https://api.invoq.money`
 - **Checkout hospedado:** `https://pay.invoq.money/<id da fatura>`
-- **Painel** (chaves de API, carteira de recebimento, webhooks): `https://app.invoq.money`
 - **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — este contrato, legível por máquina
 
 **Programa com IA? Cole isto.**

@@ -10,7 +10,6 @@ Burası invoq'un herkese açık REST API'sinin referansı. Resmî SDK'lar — [N
 
 - **Temel URL:** `https://api.invoq.money`
 - **Barındırılan ödeme sayfası:** `https://pay.invoq.money/<fatura id>`
-- **Panel** (API anahtarları, tahsilat cüzdanı, webhook'lar): `https://app.invoq.money`
 - **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — bu sözleşmenin makine tarafından okunabilir hâli
 
 **AI ile mi kod yazıyorsunuz? Bunu yapıştırın.**

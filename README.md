@@ -8,7 +8,6 @@ This is the reference for invoq's public REST API. The official SDKs — [Node.j
 
 - **Base URL:** `https://api.invoq.money`
 - **Hosted checkout:** `https://pay.invoq.money/<invoice id>`
-- **Dashboard** (API keys, receiving wallet, webhooks): `https://app.invoq.money`
 - **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — this contract, machine-readable
 
 **Coding with AI? Paste this.**

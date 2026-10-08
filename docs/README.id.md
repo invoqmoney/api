@@ -10,7 +10,6 @@ Ini referensi REST API publik invoq. SDK resmi — [Node.js](https://github.com/
 
 - **Base URL:** `https://api.invoq.money`
 - **Checkout ter-hosting:** `https://pay.invoq.money/<id invoice>`
-- **Dashboard** (kunci API, dompet penerima, webhook): `https://app.invoq.money`
 - **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — kontrak ini, dalam bentuk yang bisa dibaca mesin
 
 **Coding pakai AI? Tempelkan ini.**

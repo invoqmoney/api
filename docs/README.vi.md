@@ -10,7 +10,6 @@ Thanh toán stablecoin, tích hợp vào sản phẩm của bạn. Không giữ 
 
 - **Base URL:** `https://api.invoq.money`
 - **Trang thanh toán được lưu trữ sẵn:** `https://pay.invoq.money/<id hóa đơn>`
-- **Bảng điều khiển** (khóa API, ví nhận tiền, webhook): `https://app.invoq.money`
 - **OpenAPI 3.1:** `https://api.invoq.money/openapi.json` — chính hợp đồng này, ở dạng máy đọc được
 
 **Đang code bằng AI? Dán câu này.**
